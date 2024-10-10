@@ -30,12 +30,3 @@ import FirebaseFirestore
     }
 }
 
-@objc public class KFirestoreFilter: NSObject {
-    @objc public let field: String
-    @objc public let value: Any
-
-    @objc public init(field: String, value: Any) {
-        self.field = field
-        self.value = value
-    }
-}

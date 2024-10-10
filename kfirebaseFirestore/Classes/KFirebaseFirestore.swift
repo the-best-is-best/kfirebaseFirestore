@@ -59,19 +59,18 @@ import FirebaseFirestore
     @objc(getDocsByFilter:orderBy:limit:filter:callback:)
     public func getDocsByFilter(
         collection: String,
-        orderBy: String,
-        limit: Int,
-        filters: [KFirestoreFilter],
+        orderBy: NSString?,  // Use NSString? instead of String?
+        limit: NSNumber?,    // Use NSNumber? instead of Int?
+        filters: NSArray = [],  // Use NSArray instead of [[String: Any]]
         callback: @escaping (KFirestoreListResult) -> Void
     ) {
-        // Initialize the query with the specified collection
         var query: Query = firestore.collection(collection)
-        
-        // Loop through filters to build the query
+
         for filter in filters {
-            let field = filter.field
-            let value = filter.value
-            
+            guard let filterDict = filter as? NSDictionary,  // Cast NSArray elements to NSDictionary
+                  let field = filterDict["field"] as? String,
+                  let value = filterDict["value"] else { continue }
+
             switch value {
             case let stringValue as String:
                 query = query.whereField(field, isEqualTo: stringValue)
@@ -79,32 +78,54 @@ import FirebaseFirestore
                 query = query.whereField(field, isEqualTo: intValue)
             case let doubleValue as Double:
                 query = query.whereField(field, isEqualTo: doubleValue)
-            case let longValue as Int64: // Firestore's Long type is represented as Int64 in Swift
+            case let longValue as Int64:
                 query = query.whereField(field, isEqualTo: longValue)
+            case let pairValue as NSDictionary:
+                guard let operatorStr = pairValue["operator"] as? String,
+                      let filterValue = pairValue["value"] else { continue }
+
+                switch operatorStr {
+                case "=":
+                    query = query.whereField(field, isEqualTo: filterValue)
+                case "<":
+                    query = query.whereField(field, isLessThan: filterValue)
+                case "<=":
+                    query = query.whereField(field, isLessThanOrEqualTo: filterValue)
+                case ">":
+                    query = query.whereField(field, isGreaterThan: filterValue)
+                case ">=":
+                    query = query.whereField(field, isGreaterThanOrEqualTo: filterValue)
+                case "!=":
+                    query = query.whereField(field, isNotEqualTo: filterValue)
+                default:
+                    break
+                }
             default:
                 break
             }
         }
-        
-        // Add ordering to the query
-        query = query.order(by: orderBy)
-        
-        // Add limit to the query
-        query = query.limit(to: limit)
-        
-        // Execute the query
+
+        if let orderBy = orderBy {
+            query = query.order(by: orderBy as String)
+        }
+
+        if let limit = limit?.intValue, limit > 0 {
+            query = query.limit(to: limit)
+        }
+
         query.getDocuments { (querySnapshot, error) in
             if let error = error {
                 callback(KFirestoreListResult(data: nil, error: error))
             } else if let documents = querySnapshot?.documents {
-                let data = documents.map { $0.data() } // Extract data from documents
-                callback(KFirestoreListResult(data: data, error: nil)) // Return data instead of documents
+                let data = documents.map { $0.data() }
+                callback(KFirestoreListResult(data: data, error: nil))
             } else {
-                // Return an empty result if there are no documents
                 callback(KFirestoreListResult(data: [], error: nil))
             }
         }
     }
+
+
     
     @objc(updateDocument:documentId:data:callback:)
     public func updateDocument(
