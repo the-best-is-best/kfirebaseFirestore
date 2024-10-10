@@ -1,6 +1,5 @@
 # kfirebaseFirestore
 
-[![CI Status](https://img.shields.io/travis/72160249/kfirebaseFirestore.svg?style=flat)](https://travis-ci.org/72160249/kfirebaseFirestore)
 [![Version](https://img.shields.io/cocoapods/v/kfirebaseFirestore.svg?style=flat)](https://cocoapods.org/pods/kfirebaseFirestore)
 [![License](https://img.shields.io/cocoapods/l/kfirebaseFirestore.svg?style=flat)](https://cocoapods.org/pods/kfirebaseFirestore)
 [![Platform](https://img.shields.io/cocoapods/p/kfirebaseFirestore.svg?style=flat)](https://cocoapods.org/pods/kfirebaseFirestore)
@@ -22,8 +21,10 @@ pod 'kfirebaseFirestore'
 
 ## Author
 
-72160249, michelle.raouf@52ndsolution.net
+tbib, <michelle.raouf@outlook.com>
 
 ## License
 
 kfirebaseFirestore is available under the MIT license. See the LICENSE file for more info.
+
+## Note this package used in kotlin multi-platform

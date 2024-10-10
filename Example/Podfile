@@ -1,7 +1,8 @@
 use_frameworks!
 target 'kfirebaseFirestore_Tests' do
+platform :ios, '13'  # Set the iOS deployment target
+
   pod 'kfirebaseFirestore', :path => '../'
+ 	 
   
-  pod 'Quick', '~> 2.2.0'
-    pod 'Nimble', '~> 10.0.0'
 end
