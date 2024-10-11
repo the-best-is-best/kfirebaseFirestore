@@ -59,19 +59,20 @@ import FirebaseFirestore
     @objc(getDocsByFilter:orderBy:limit:filter:callback:)
     public func getDocsByFilter(
         collection: String,
-        orderBy: NSString?,  // Use NSString? instead of String?
-        limit: NSNumber?,    // Use NSNumber? instead of Int?
-        filters: NSArray = [],  // Use NSArray instead of [[String: Any]]
+        orderBy: NSString?,
+        limit: NSNumber?,
+        filters: NSArray = [],
         callback: @escaping (KFirestoreListResult) -> Void
     ) {
         var query: Query = firestore.collection(collection)
         
         for filter in filters {
-            guard let filterDict = filter as? NSDictionary,  // Cast NSArray elements to NSDictionary
-                  let field = filterDict["field"] as? String,
-                  let operatorStr = filterDict["operator"] as? String,
-                  let value = filterDict["value"] else { continue }
+            guard let filterPair = filter as? [String: Any],  // Cast NSArray elements to Dictionary
+                  let operatorStr = filterPair["operator"] as? String,
+                  let value = filterPair["value"] else { continue }
 
+            let field = (filterPair["field"] as? String)?.split(separator: " ").first ?? ""
+            
             // Handle different operator cases based on operatorStr
             switch operatorStr {
             case "==":
@@ -121,6 +122,7 @@ import FirebaseFirestore
             }
         }
     }
+
 
 
 
