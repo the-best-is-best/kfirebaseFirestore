@@ -65,43 +65,40 @@ import FirebaseFirestore
         callback: @escaping (KFirestoreListResult) -> Void
     ) {
         var query: Query = firestore.collection(collection)
-
+        
         for filter in filters {
             guard let filterDict = filter as? NSDictionary,  // Cast NSArray elements to NSDictionary
                   let field = filterDict["field"] as? String,
+                  let operatorStr = filterDict["operator"] as? String,
                   let value = filterDict["value"] else { continue }
 
-            switch value {
-            case let stringValue as String:
-                query = query.whereField(field, isEqualTo: stringValue)
-            case let intValue as Int:
-                query = query.whereField(field, isEqualTo: intValue)
-            case let doubleValue as Double:
-                query = query.whereField(field, isEqualTo: doubleValue)
-            case let longValue as Int64:
-                query = query.whereField(field, isEqualTo: longValue)
-            case let pairValue as NSDictionary:
-                guard let operatorStr = pairValue["operator"] as? String,
-                      let filterValue = pairValue["value"] else { continue }
-
-                switch operatorStr {
-                case "=":
-                    query = query.whereField(field, isEqualTo: filterValue)
-                case "<":
-                    query = query.whereField(field, isLessThan: filterValue)
-                case "<=":
-                    query = query.whereField(field, isLessThanOrEqualTo: filterValue)
-                case ">":
-                    query = query.whereField(field, isGreaterThan: filterValue)
-                case ">=":
-                    query = query.whereField(field, isGreaterThanOrEqualTo: filterValue)
-                case "!=":
-                    query = query.whereField(field, isNotEqualTo: filterValue)
-                default:
-                    break
-                }
+            // Handle different operator cases based on operatorStr
+            switch operatorStr {
+            case "==":
+                query = query.whereField(field, isEqualTo: value)
+            case "<":
+                query = query.whereField(field, isLessThan: value)
+            case "<=":
+                query = query.whereField(field, isLessThanOrEqualTo: value)
+            case ">":
+                query = query.whereField(field, isGreaterThan: value)
+            case ">=":
+                query = query.whereField(field, isGreaterThanOrEqualTo: value)
+            case "!=":
+                query = query.whereField(field, isNotEqualTo: value)
+            case "array-contains":
+                query = query.whereField(field, arrayContains: value)
+            case "array-contains-any":
+                guard let arrayValue = value as? [Any] else { continue }
+                query = query.whereField(field, arrayContainsAny: arrayValue)
+            case "in":
+                guard let arrayValue = value as? [Any] else { continue }
+                query = query.whereField(field, in: arrayValue)
+            case "not-in":
+                guard let arrayValue = value as? [Any] else { continue }
+                query = query.whereField(field, notIn: arrayValue)
             default:
-                break
+                continue  // Ignore unsupported operators
             }
         }
 
@@ -124,6 +121,7 @@ import FirebaseFirestore
             }
         }
     }
+
 
 
     
@@ -206,5 +204,6 @@ import FirebaseFirestore
             }
         }
     }
+    
 
 }
