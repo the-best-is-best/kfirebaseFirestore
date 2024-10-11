@@ -67,37 +67,49 @@ import FirebaseFirestore
         var query: Query = firestore.collection(collection)
         
         for filter in filters {
-            guard let filterPair = filter as? [String: Any],  // Cast NSArray elements to Dictionary
+            guard let filterPair = filter as? [String: Any],
                   let operatorStr = filterPair["operator"] as? String,
                   let value = filterPair["value"] else { continue }
 
-            let field = (filterPair["field"] as? String)?.split(separator: " ").first ?? ""
+            // Convert the first part of the split into a String
+            let field = (filterPair["field"] as? String)?.split(separator: " ").first.map { String($0) } ?? ""
             
-            // Handle different operator cases based on operatorStr
+            // Ensure the value is of the expected type
             switch operatorStr {
             case "==":
-                query = query.whereField(field, isEqualTo: value)
+                query = query.whereField(field, isEqualTo: value)  // Any type
             case "<":
-                query = query.whereField(field, isLessThan: value)
+                if let numberValue = value as? NSNumber {
+                    query = query.whereField(field, isLessThan: numberValue)
+                }
             case "<=":
-                query = query.whereField(field, isLessThanOrEqualTo: value)
+                if let numberValue = value as? NSNumber {
+                    query = query.whereField(field, isLessThanOrEqualTo: numberValue)
+                }
             case ">":
-                query = query.whereField(field, isGreaterThan: value)
+                if let numberValue = value as? NSNumber {
+                    query = query.whereField(field, isGreaterThan: numberValue)
+                }
             case ">=":
-                query = query.whereField(field, isGreaterThanOrEqualTo: value)
+                if let numberValue = value as? NSNumber {
+                    query = query.whereField(field, isGreaterThanOrEqualTo: numberValue)
+                }
             case "!=":
-                query = query.whereField(field, isNotEqualTo: value)
+                query = query.whereField(field, isNotEqualTo: value)  // Any type
             case "array-contains":
-                query = query.whereField(field, arrayContains: value)
+                query = query.whereField(field, arrayContains: value)  // Must be of type Any
             case "array-contains-any":
-                guard let arrayValue = value as? [Any] else { continue }
-                query = query.whereField(field, arrayContainsAny: arrayValue)
+                if let arrayValue = value as? [Any] {
+                    query = query.whereField(field, arrayContainsAny: arrayValue)
+                }
             case "in":
-                guard let arrayValue = value as? [Any] else { continue }
-                query = query.whereField(field, in: arrayValue)
+                if let arrayValue = value as? [Any] {
+                    query = query.whereField(field, in: arrayValue)
+                }
             case "not-in":
-                guard let arrayValue = value as? [Any] else { continue }
-                query = query.whereField(field, notIn: arrayValue)
+                if let arrayValue = value as? [Any] {
+                    query = query.whereField(field, notIn: arrayValue)
+                }
             default:
                 continue  // Ignore unsupported operators
             }
@@ -122,6 +134,7 @@ import FirebaseFirestore
             }
         }
     }
+
 
 
 
