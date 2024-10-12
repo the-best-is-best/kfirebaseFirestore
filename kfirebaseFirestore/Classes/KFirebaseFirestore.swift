@@ -61,7 +61,7 @@ import FirebaseFirestore
         collection: String,
         orderBy: NSString?,
         limit: NSNumber?,
-        filters: NSArray = [],
+        filters: [[String: Any]],
         callback: @escaping (KFirestoreListResult) -> Void
     ) {
         var query: Query = firestore.collection(collection)
@@ -69,15 +69,20 @@ import FirebaseFirestore
         for filter in filters {
             guard let filterPair = filter as? [String: Any],
                   let operatorStr = filterPair["operator"] as? String,
-                  let value = filterPair["value"] else { continue }
+                  let value = filterPair["value"] else {
+                print("Invalid filter: \(filter)")
+                continue
+            }
 
-            // Convert the first part of the split into a String
             let field = (filterPair["field"] as? String)?.split(separator: " ").first.map { String($0) } ?? ""
             
-            // Ensure the value is of the expected type
+            // Log filter details
+            print("Applying filter: \(field) \(operatorStr) \(value)")
+
+            // Apply filter logic as before
             switch operatorStr {
             case "==":
-                query = query.whereField(field, isEqualTo: value)  // Any type
+                query = query.whereField(field, isEqualTo: value)
             case "<":
                 if let numberValue = value as? NSNumber {
                     query = query.whereField(field, isLessThan: numberValue)
@@ -95,9 +100,9 @@ import FirebaseFirestore
                     query = query.whereField(field, isGreaterThanOrEqualTo: numberValue)
                 }
             case "!=":
-                query = query.whereField(field, isNotEqualTo: value)  // Any type
+                query = query.whereField(field, isNotEqualTo: value)
             case "array-contains":
-                query = query.whereField(field, arrayContains: value)  // Must be of type Any
+                query = query.whereField(field, arrayContains: value)
             case "array-contains-any":
                 if let arrayValue = value as? [Any] {
                     query = query.whereField(field, arrayContainsAny: arrayValue)
@@ -111,9 +116,11 @@ import FirebaseFirestore
                     query = query.whereField(field, notIn: arrayValue)
                 }
             default:
-                continue  // Ignore unsupported operators
+                print("Unsupported operator: \(operatorStr)")
+                continue
             }
         }
+        
 
         if let orderBy = orderBy {
             query = query.order(by: orderBy as String)
