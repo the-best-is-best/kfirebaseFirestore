@@ -5,6 +5,8 @@ import FirebaseFirestore
 @objc public class KFirebaseFirestore: NSObject {
     private let firestore = Firestore.firestore()
     
+    private var listener: ListenerRegistration?
+
     
     @objc(addDocs:documentId:data:callback:)
     public func addDocs(
@@ -154,6 +156,7 @@ import FirebaseFirestore
         data: [String: Any],
         callback: @escaping (KFirestoreResultUnit) -> Void
     ){
+        
         firestore.collection(collection).document(documentId).updateData(data) { error in
             if let error = error {
                 // Callback with error if there's an error
@@ -227,5 +230,27 @@ import FirebaseFirestore
         }
     }
     
+    @objc(startRealTimeListener:callback:)
+       public func startRealTimeListener(
+           collection: String,
+           callback: @escaping (KFirestoreListResult) -> Void
+       ) {
+           listener = firestore.collection(collection)
+               .addSnapshotListener { (querySnapshot, error) in
+                   if let error = error {
+                       // Callback with error if there's an error
+                       callback(KFirestoreListResult(data: nil, error: error))
+                   } else {
+                       let data = querySnapshot?.documents.map { $0.data() }
+                       callback(KFirestoreListResult(data: data, error: nil)) // Return the data
+                   }
+               }
+       }
 
+       // Stop listener method
+       @objc(stopRealTimeListener)
+       public func stopRealTimeListener() {
+           listener?.remove()
+           listener = nil
+       }
 }

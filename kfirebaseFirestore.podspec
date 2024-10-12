@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'kfirebaseFirestore'
-  s.version          = '0.1.0-5-rc'
+  s.version          = '0.1.0-6-rc'
   s.summary          = 'This package used for kmm with firebase.'
 
 # This description is used to generate tags and improve search results.
